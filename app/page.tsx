@@ -438,7 +438,7 @@ export default function YanYuCloudAI() {
           <div className="flex justify-between items-center h-16">
             <div className="flex items-center space-x-4">
               <img
-                src="https://hebbkx1anhila5yf.public.blob.vercel-storage.com/3-IEzjrf4507B176JfJTY0HFBnQ1Y2ka.png"
+                src="/images/design-mode/3.png"
                 alt="言语云³ Logo"
                 className="h-10 w-10"
               />
@@ -749,7 +749,7 @@ export default function YanYuCloudAI() {
                   className="mb-6"
                 >
                   <img
-                    src="https://hebbkx1anhila5yf.public.blob.vercel-storage.com/3-IEzjrf4507B176JfJTY0HFBnQ1Y2ka.png"
+                    src="/images/design-mode/3.png"
                     alt="言语云³"
                     className="w-32 h-32 mx-auto mb-4"
                   />
