@@ -24,7 +24,7 @@ from typing import List, Dict, Any
 import plotly.graph_objects as go
 import plotly.express as px
 from plotly.subplots import make_subplots
-import os
+import socket
 import time
 import math
 from pathlib import Path
@@ -1190,20 +1190,27 @@ def url_analyzer(url):
         if not hostname:
             return "❌ 无效的URL地址"
         
-        # 阻止localhost和内网IP地址
-        if hostname in ['localhost', '127.0.0.1', '0.0.0.0'] or \
-           hostname.startswith('10.') or \
-           hostname.startswith('192.168.') or \
-           hostname.startswith('172.16.') or hostname.startswith('172.17.') or \
-           hostname.startswith('172.18.') or hostname.startswith('172.19.') or \
-           hostname.startswith('172.20.') or hostname.startswith('172.21.') or \
-           hostname.startswith('172.22.') or hostname.startswith('172.23.') or \
-           hostname.startswith('172.24.') or hostname.startswith('172.25.') or \
-           hostname.startswith('172.26.') or hostname.startswith('172.27.') or \
-           hostname.startswith('172.28.') or hostname.startswith('172.29.') or \
-           hostname.startswith('172.30.') or hostname.startswith('172.31.') or \
-           hostname.startswith('169.254.'):
-            return "❌ 出于安全考虑，不允许访问内网地址"
+        # 解析域名获取IP地址，检查是否为内网地址
+        try:
+            ip_address = socket.gethostbyname(hostname)
+            # 检查IP是否为内网地址
+            ip_parts = ip_address.split('.')
+            if len(ip_parts) == 4:
+                first_octet = int(ip_parts[0])
+                second_octet = int(ip_parts[1])
+                # 私有IP地址范围
+                if (first_octet == 10 or  # 10.0.0.0/8
+                    (first_octet == 172 and 16 <= second_octet <= 31) or  # 172.16.0.0/12
+                    (first_octet == 192 and second_octet == 168) or  # 192.168.0.0/16
+                    (first_octet == 169 and second_octet == 254) or  # 169.254.0.0/16 (link-local)
+                    first_octet == 127):  # 127.0.0.0/8 (loopback)
+                    return "❌ 出于安全考虑，不允许访问内网地址"
+        except socket.gaierror:
+            return "❌ 无法解析域名，请检查URL是否正确"
+        
+        # 阻止localhost
+        if hostname.lower() in ['localhost', '0.0.0.0']:
+            return "❌ 出于安全考虑，不允许访问本地地址"
         
         # 只允许HTTP和HTTPS协议
         if parsed.scheme not in ['http', 'https']:
