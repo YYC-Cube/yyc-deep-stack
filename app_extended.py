@@ -1066,30 +1066,45 @@ def file_encryption_tool(file_content, password, operation):
         if not password:
             return "❌ 请输入密码", ""
         
-        # 简单的加密解密算法（仅用于演示）
-        def simple_encrypt(text, key):
-            result = ""
-            for i, char in enumerate(text):
-                key_char = key[i % len(key)]
-                encrypted_char = chr((ord(char) + ord(key_char)) % 256)
-                result += encrypted_char
-            return base64.b64encode(result.encode('latin-1')).decode('ascii')
+        # 改进的加密解密算法 - 使用PBKDF2派生密钥
+        def improved_encrypt(text, password):
+            # 使用PBKDF2从密码派生密钥
+            salt = secrets.token_bytes(16)
+            key = hashlib.pbkdf2_hmac('sha256', password.encode('utf-8'), salt, 100000)
+            
+            # 使用密钥进行XOR加密（简化实现，生产环境应使用AES）
+            text_bytes = text.encode('utf-8')
+            encrypted = bytearray()
+            for i, byte in enumerate(text_bytes):
+                encrypted.append(byte ^ key[i % len(key)])
+            
+            # 组合salt和加密数据
+            result = salt + bytes(encrypted)
+            return base64.b64encode(result).decode('ascii')
         
-        def simple_decrypt(encrypted_text, key):
+        def improved_decrypt(encrypted_text, password):
             try:
+                # 解码base64
                 encrypted_bytes = base64.b64decode(encrypted_text.encode('ascii'))
-                encrypted_str = encrypted_bytes.decode('latin-1')
-                result = ""
-                for i, char in enumerate(encrypted_str):
-                    key_char = key[i % len(key)]
-                    decrypted_char = chr((ord(char) - ord(key_char)) % 256)
-                    result += decrypted_char
-                return result
-            except:
+                
+                # 提取salt和加密数据
+                salt = encrypted_bytes[:16]
+                encrypted_data = encrypted_bytes[16:]
+                
+                # 使用相同的方法派生密钥
+                key = hashlib.pbkdf2_hmac('sha256', password.encode('utf-8'), salt, 100000)
+                
+                # 解密
+                decrypted = bytearray()
+                for i, byte in enumerate(encrypted_data):
+                    decrypted.append(byte ^ key[i % len(key)])
+                
+                return bytes(decrypted).decode('utf-8')
+            except Exception as e:
                 return None
         
         if operation == "加密":
-            result = simple_encrypt(file_content, password)
+            result = improved_encrypt(file_content, password)
             status = f"""
 🔒 加密完成！
 
@@ -1097,9 +1112,12 @@ def file_encryption_tool(file_content, password, operation):
 • 原始长度：{len(file_content)} 字符
 • 加密后长度：{len(result)} 字符
 • 密码强度：{'强' if len(password) >= 8 else '中' if len(password) >= 6 else '弱'}
+• 加密算法：PBKDF2-HMAC-SHA256 (100000轮)
 • 加密时间：{datetime.datetime.now().strftime('%H:%M:%S')}
 
 🔐 安全提示：
+• 使用PBKDF2密钥派生函数增强安全性
+• 每次加密使用随机盐值
 • 请妥善保管您的密码
 • 密码丢失将无法恢复数据
 • 建议使用复杂密码提高安全性
@@ -1109,10 +1127,11 @@ def file_encryption_tool(file_content, password, operation):
 • 复制加密结果到安全位置
 • 记录密码到密码管理器
 • 定期更换重要文件的密码
+• 本工具使用改进加密，但生产环境建议使用AES等行业标准加密算法
 """
             
         else:  # 解密
-            result = simple_decrypt(file_content, password)
+            result = improved_decrypt(file_content, password)
             if result is None:
                 return "❌ 解密失败，请检查密码或数据格式", "❌ 解密失败"
             
@@ -1167,7 +1186,7 @@ def url_analyzer(url):
         
         # 尝试获取网页信息
         try:
-            response = requests.get(url, timeout=10, headers={
+            response = requests.get(url, timeout=10, verify=True, headers={
                 'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'
             })
             status_code = response.status_code

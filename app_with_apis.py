@@ -329,7 +329,7 @@ def weather_service(city, units="metric"):
         if API_CONFIG["weather"]["enabled"]:
             # 真实API调用代码
             url = f"{API_CONFIG['weather']['base_url']}?q={city}&appid={API_CONFIG['weather']['api_key']}&units={units}&lang=zh_cn"
-            response = requests.get(url, timeout=10)
+            response = requests.get(url, timeout=10, verify=True)
             
             if response.status_code == 200:
                 data = response.json()
@@ -456,7 +456,7 @@ def translation_service(text, source_lang, target_lang):
                 "format": "text"
             }
             
-            response = requests.post(url, data=params, timeout=10)
+            response = requests.post(url, data=params, timeout=10, verify=True)
             
             if response.status_code == 200:
                 data = response.json()
@@ -579,7 +579,7 @@ def news_service(category, country="cn"):
                 "pageSize": 10
             }
             
-            response = requests.get(url, params=params, timeout=10)
+            response = requests.get(url, params=params, timeout=10, verify=True)
             
             if response.status_code == 200:
                 data = response.json()
@@ -735,7 +735,7 @@ def currency_service(from_currency, to_currency, amount):
         if API_CONFIG["currency"]["enabled"]:
             # 真实API调用代码
             url = f"{API_CONFIG['currency']['base_url']}/{from_currency}"
-            response = requests.get(url, timeout=10)
+            response = requests.get(url, timeout=10, verify=True)
             
             if response.status_code == 200:
                 data = response.json()
@@ -850,7 +850,7 @@ def ip_lookup_service(ip_address):
             url = f"{API_CONFIG['ipinfo']['base_url']}/{ip_address}/json"
             params = {"token": API_CONFIG["ipinfo"]["api_key"]}
             
-            response = requests.get(url, params=params, timeout=10)
+            response = requests.get(url, params=params, timeout=10, verify=True)
             
             if response.status_code == 200:
                 data = response.json()
@@ -957,7 +957,7 @@ def stock_service(symbol):
                 "apikey": API_CONFIG["stocks"]["api_key"]
             }
             
-            response = requests.get(url, params=params, timeout=10)
+            response = requests.get(url, params=params, timeout=10, verify=True)
             
             if response.status_code == 200:
                 data = response.json()
