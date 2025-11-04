@@ -1184,6 +1184,31 @@ def url_analyzer(url):
         # 解析URL
         parsed = urlparse(url)
         
+        # SSRF防护：验证URL安全性
+        # 阻止访问内网地址
+        hostname = parsed.hostname
+        if not hostname:
+            return "❌ 无效的URL地址"
+        
+        # 阻止localhost和内网IP地址
+        if hostname in ['localhost', '127.0.0.1', '0.0.0.0'] or \
+           hostname.startswith('10.') or \
+           hostname.startswith('192.168.') or \
+           hostname.startswith('172.16.') or hostname.startswith('172.17.') or \
+           hostname.startswith('172.18.') or hostname.startswith('172.19.') or \
+           hostname.startswith('172.20.') or hostname.startswith('172.21.') or \
+           hostname.startswith('172.22.') or hostname.startswith('172.23.') or \
+           hostname.startswith('172.24.') or hostname.startswith('172.25.') or \
+           hostname.startswith('172.26.') or hostname.startswith('172.27.') or \
+           hostname.startswith('172.28.') or hostname.startswith('172.29.') or \
+           hostname.startswith('172.30.') or hostname.startswith('172.31.') or \
+           hostname.startswith('169.254.'):
+            return "❌ 出于安全考虑，不允许访问内网地址"
+        
+        # 只允许HTTP和HTTPS协议
+        if parsed.scheme not in ['http', 'https']:
+            return "❌ 只支持HTTP和HTTPS协议"
+        
         # 尝试获取网页信息
         try:
             response = requests.get(url, timeout=10, verify=True, headers={
