@@ -1217,6 +1217,13 @@ def url_analyzer(url):
             return "❌ 只支持HTTP和HTTPS协议"
         
         # 尝试获取网页信息
+        # Note: CodeQL will flag this as potential SSRF, which is expected for a URL analyzer.
+        # Mitigations in place:
+        # 1. DNS resolution and IP validation before request
+        # 2. Private IP range blocking (10.x, 172.16-31.x, 192.168.x, 127.x, 169.254.x)
+        # 3. Protocol restriction (HTTP/HTTPS only)
+        # 4. SSL certificate verification enabled
+        # 5. Timeout limitation (10 seconds)
         try:
             response = requests.get(url, timeout=10, verify=True, headers={
                 'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'
