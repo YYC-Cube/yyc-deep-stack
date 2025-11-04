@@ -1069,10 +1069,17 @@ def file_encryption_tool(file_content, password, operation):
         # 改进的加密解密算法 - 使用PBKDF2派生密钥
         def improved_encrypt(text, password):
             # 使用PBKDF2从密码派生密钥
+            # 100,000 iterations chosen based on OWASP recommendations for 2024
+            # - Balances security against brute force attacks with acceptable performance
+            # - Takes ~100ms on modern hardware, deterring password cracking
+            # - NIST recommends minimum 10,000 iterations, we use 10x for added security
             salt = secrets.token_bytes(16)
             key = hashlib.pbkdf2_hmac('sha256', password.encode('utf-8'), salt, 100000)
             
-            # 使用密钥进行XOR加密（简化实现，生产环境应使用AES）
+            # ⚠️ SECURITY WARNING: Using XOR encryption for simplicity
+            # This is NOT suitable for production use with sensitive data
+            # For production: Use cryptography library with AES-GCM or AES-CBC
+            # Example: from cryptography.fernet import Fernet
             text_bytes = text.encode('utf-8')
             encrypted = bytearray()
             for i, byte in enumerate(text_bytes):
@@ -1108,11 +1115,18 @@ def file_encryption_tool(file_content, password, operation):
             status = f"""
 🔒 加密完成！
 
+⚠️ 重要安全警告 ⚠️
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+本工具使用简化的加密实现，仅适用于演示和非敏感数据。
+❌ 不要用于保护敏感信息（如密码、财务数据、个人隐私等）
+✅ 生产环境请使用行业标准加密库（如Python cryptography库的Fernet或AES-GCM）
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
 📊 加密信息：
 • 原始长度：{len(file_content)} 字符
 • 加密后长度：{len(result)} 字符
 • 密码强度：{'强' if len(password) >= 8 else '中' if len(password) >= 6 else '弱'}
-• 加密算法：PBKDF2-HMAC-SHA256 (100000轮)
+• 加密算法：PBKDF2-HMAC-SHA256 (100000轮) + XOR
 • 加密时间：{datetime.datetime.now().strftime('%H:%M:%S')}
 
 🔐 安全提示：
@@ -1121,13 +1135,12 @@ def file_encryption_tool(file_content, password, operation):
 • 请妥善保管您的密码
 • 密码丢失将无法恢复数据
 • 建议使用复杂密码提高安全性
-• 加密结果可以安全传输和存储
 
 💡 使用建议：
+• 仅用于非敏感数据的简单加密需求
 • 复制加密结果到安全位置
 • 记录密码到密码管理器
-• 定期更换重要文件的密码
-• 本工具使用改进加密，但生产环境建议使用AES等行业标准加密算法
+• 对于重要数据，请使用专业加密工具
 """
             
         else:  # 解密
